@@ -68,6 +68,8 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+<!--    This could be done in two ways, MapView or MapFragment. In MapFragment we don't need to worry about the lifecycle of the map and
+in case of mapView we need to handle the lifecycle stuff of the map on our own. Also putting a fragment inside a fragment is not good performace wise-->
     <com.google.android.gms.maps.MapView
         android:id="@+id/mapView"
         android:layout_width="match_parent"

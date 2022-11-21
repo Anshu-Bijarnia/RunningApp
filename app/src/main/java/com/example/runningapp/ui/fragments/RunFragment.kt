@@ -35,6 +35,7 @@ class RunFragment : Fragment(R.layout.fragment_run),EasyPermissions.PermissionCa
         }
     }
 
+
     private fun requestPermissions(){
         if (TrackingUtility.hasLocationPermission(requireContext())){
             return
@@ -47,6 +48,15 @@ class RunFragment : Fragment(R.layout.fragment_run),EasyPermissions.PermissionCa
                 Manifest.permission.ACCESS_COARSE_LOCATION,
                 Manifest.permission.ACCESS_FINE_LOCATION
             )
+        }else if (Build.VERSION.SDK_INT == Build.VERSION_CODES.Q){
+            EasyPermissions.requestPermissions(
+                this,
+                "You need to accept location permissions to use this app.",
+                REQUEST_CODE_LOCATION_PERMISSION,
+                Manifest.permission.ACCESS_COARSE_LOCATION,
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_BACKGROUND_LOCATION
+            )
         }else {
             EasyPermissions.requestPermissions(
                 this,
@@ -54,13 +64,25 @@ class RunFragment : Fragment(R.layout.fragment_run),EasyPermissions.PermissionCa
                 REQUEST_CODE_LOCATION_PERMISSION,
                 Manifest.permission.ACCESS_COARSE_LOCATION,
                 Manifest.permission.ACCESS_FINE_LOCATION,
-//                Manifest.permission.ACCESS_BACKGROUND_LOCATION
             )
         }
     }
-
+    private fun requestBackgroundPermission(){
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.Q &&
+            EasyPermissions.hasPermissions(requireContext(),Manifest.permission.ACCESS_FINE_LOCATION)
+            && !EasyPermissions.hasPermissions(requireContext(),Manifest.permission.ACCESS_BACKGROUND_LOCATION)) {
+            EasyPermissions.requestPermissions(
+                this,
+                "Background Location is needed for this app to work",
+                REQUEST_CODE_LOCATION_PERMISSION,
+                Manifest.permission.ACCESS_BACKGROUND_LOCATION
+            )
+        }
+    }
     // If they are granted we dont have to do anything
-    override fun onPermissionsGranted(requestCode: Int, perms: MutableList<String>) { }
+    override fun onPermissionsGranted(requestCode: Int, perms: MutableList<String>) {
+        requestBackgroundPermission()
+    }
 
     // This is needed to check if the user permanently denied the permission or we need to show him the dialog to request permission again
     override fun onPermissionsDenied(requestCode: Int, perms: MutableList<String>) {

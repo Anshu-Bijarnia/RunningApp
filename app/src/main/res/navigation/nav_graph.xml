@@ -3,6 +3,11 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/nav_graph"
     app:startDestination="@id/setupFragment">
+<!--&lt;!&ndash;launchSingletop will make sure that we don't launch new instance of our activity, if this is not set everytime we
+click on the notification the activity will launch again and all our data will be lost-->
+    <action android:id="@+id/action_global_tracking_fragment"
+        app:destination="@id/trackingFragment"
+        app:launchSingleTop="true"/>
 
     <fragment
         android:id="@+id/runFragment"
