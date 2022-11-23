@@ -95,7 +95,7 @@ class TrackingService : LifecycleService() {
         isFirstRun = true
         pauseService()
         postInitialValues()
-        stopForeground(STOP_FOREGROUND_DETACH)
+        stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
     }
 

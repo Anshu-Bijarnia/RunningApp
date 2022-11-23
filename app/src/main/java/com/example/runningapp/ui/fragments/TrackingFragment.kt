@@ -13,6 +13,7 @@ import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
 import com.example.runningapp.R
 import com.example.runningapp.databinding.FragmentTrackingBinding
+import com.example.runningapp.db.Run
 import com.example.runningapp.other.Constants.ACTION_PAUSE_SERVICE
 import com.example.runningapp.services.TrackingService
 import com.example.runningapp.ui.viewmodels.MainViewModel
@@ -26,9 +27,13 @@ import com.example.runningapp.other.Constants.POLYLINE_WIDTH
 import com.example.runningapp.other.TrackingUtility
 import com.example.runningapp.services.Polyline
 import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.maps.model.PolylineOptions
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.snackbar.Snackbar
 import timber.log.Timber
+import java.util.Calendar
+import kotlin.math.round
 
 @AndroidEntryPoint
 class TrackingFragment : Fragment(R.layout.fragment_tracking) {
@@ -41,8 +46,8 @@ class TrackingFragment : Fragment(R.layout.fragment_tracking) {
     private var map : GoogleMap? = null
 
     private var curTimeInMillis = 0L
-
-    private var menu: Menu? = null
+    private var menu : Menu? = null
+    private var weight = 80f
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         binding = FragmentTrackingBinding.bind(view)
@@ -50,34 +55,33 @@ class TrackingFragment : Fragment(R.layout.fragment_tracking) {
 
         val menuHost : MenuHost = requireActivity()
         menuHost.addMenuProvider(object :MenuProvider {
-
             override fun onPrepareMenu(menu: Menu) {
                 super.onPrepareMenu(menu)
-                if(curTimeInMillis >0L){
+                if (curTimeInMillis > 0L){
                     menu?.getItem(0)?.isVisible = true
                 }
             }
             override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
                 menuInflater.inflate(R.menu.toolbar_tracking_menu,menu)
+                this@TrackingFragment.menu = menu
             }
             override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
-                val dialog = MaterialAlertDialogBuilder(requireContext(),R.style.AlertDialogTheme)
-                    .setTitle("Cancel the run?")
-                    .setMessage("Are you sure to cancel the current run and delete all its data?")
-                    .setIcon(R.drawable.ic_delete)
-                    .setPositiveButton("Yes"){ _,_->
-                        stopRun()
+
+                return when (menuItem.itemId){
+                    R.id.miCancelTracking -> {
+                        showCancelDialog()
+                        true
                     }
-                    .setNegativeButton("No"){ dialogInterface,_->
-                        dialogInterface.cancel()
-                    }
-                    .create()
-                dialog.show()
-                return true
+                    else -> false
+                }
             }
         },viewLifecycleOwner,Lifecycle.State.RESUMED)
 
         binding.apply {
+            btnFinishRun.setOnClickListener {
+                zoomToSeeWholeTrack()
+                endRunAndSaveToDb()
+            }
             btnToggleRun.setOnClickListener {
                 toggleRun()
             }
@@ -89,7 +93,21 @@ class TrackingFragment : Fragment(R.layout.fragment_tracking) {
         }
         subscribeToObservers()
     }
-
+    private fun showCancelDialog(){
+        val dialog =
+            MaterialAlertDialogBuilder(requireContext(), R.style.AlertDialogTheme)
+                .setTitle("Cancel the run?")
+                .setMessage("Are you sure to cancel the current run and delete all its data?")
+                .setIcon(R.drawable.ic_delete)
+                .setPositiveButton("Yes") { _, _ ->
+                    stopRun()
+                }
+                .setNegativeButton("No") { dialogInterface, _ ->
+                    dialogInterface.cancel()
+                }
+                .create()
+        dialog.show()
+    }
     private fun stopRun(){
         sendCommandToService(ACTION_STOP_SERVICE)
         findNavController().navigate(R.id.action_trackingFragment_to_runFragment)
@@ -145,6 +163,43 @@ class TrackingFragment : Fragment(R.layout.fragment_tracking) {
                     MAP_ZOOM
                 )
             )
+        }
+    }
+
+    private fun zoomToSeeWholeTrack(){
+        val bounds = LatLngBounds.Builder()
+        for (polyline in pathPoints){
+            for (pos in polyline){
+                bounds.include(pos)
+            }
+        }
+        map?.moveCamera(
+            CameraUpdateFactory.newLatLngBounds(
+                bounds.build(),
+                binding.mapView.width,
+                binding.mapView.height,
+                (binding.mapView.height*0.05f).toInt()
+            )
+        )
+    }
+
+    private fun endRunAndSaveToDb(){
+        map?.snapshot { bmp ->
+            var distanceInMeters = 0
+            for (polyline in pathPoints){
+                distanceInMeters += TrackingUtility.calculatePolylineLength(polyline).toInt()
+            }
+            val avgSpeed = round((distanceInMeters/1000f) / (curTimeInMillis/1000f/60/60)*10)/10f
+            val dateTimeStamp = Calendar.getInstance().timeInMillis
+            val caloriesBurned = ((distanceInMeters/1000f)*weight).toInt()
+            val run = Run(bmp, dateTimeStamp,avgSpeed,distanceInMeters,curTimeInMillis,caloriesBurned)
+            viewModel.insertRun(run)
+            Snackbar.make(
+                requireActivity().findViewById(R.id.rootView), // When we call endRunAndSaveToDb fun we will move from tracking fragment to run fragment and snackbar will show even after the tracking fragment is closed, so to save the the app from crashing we need to give a view from the run fragment itself
+                "Run Saved Successfully",
+                Snackbar.LENGTH_LONG
+            ).show()
+            stopRun()
         }
     }
 
