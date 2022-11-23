@@ -30,11 +30,22 @@ class RunFragment : Fragment(R.layout.fragment_run),EasyPermissions.PermissionCa
         binding = FragmentRunBinding.bind(view)
         super.onViewCreated(view, savedInstanceState)
         requestPermissions()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU){
+            requestNotificationAccess()
+        }
         binding.fab.setOnClickListener {
             findNavController().navigate(R.id.action_runFragment_to_trackingFragment)
         }
     }
 
+    private fun requestNotificationAccess(){
+        EasyPermissions.requestPermissions(
+            this,
+            "Notification access is required",
+            2,
+            Manifest.permission.POST_NOTIFICATIONS
+        )
+    }
 
     private fun requestPermissions(){
         if (TrackingUtility.hasLocationPermission(requireContext())){
