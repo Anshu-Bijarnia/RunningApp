@@ -31,7 +31,7 @@ class MainActivity : AppCompatActivity() {
 
         setSupportActionBar(binding.toolbar)
         binding.bottomNavigationView.setupWithNavController(Navigation.findNavController(this,R.id.navHostFragment))
-
+        binding.bottomNavigationView.setOnItemReselectedListener { /*No operation*/ }
         // We need to show bottom navigation bar only when the fragment is either run,settings,statistics or else hide it
         Navigation.findNavController(this,R.id.navHostFragment)
             .addOnDestinationChangedListener{_,destination,_ ->

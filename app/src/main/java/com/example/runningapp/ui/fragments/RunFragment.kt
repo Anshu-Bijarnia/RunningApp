@@ -8,6 +8,7 @@ import android.view.View
 import android.widget.AdapterView
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
@@ -18,6 +19,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.runningapp.R
 import com.example.runningapp.adapters.RunAdapter
 import com.example.runningapp.databinding.FragmentRunBinding
+import com.example.runningapp.other.Constants
 import com.example.runningapp.other.Constants.REQUEST_CODE_LOCATION_PERMISSION
 import com.example.runningapp.other.SortType
 import com.example.runningapp.other.TrackingUtility
@@ -36,6 +38,8 @@ class RunFragment : Fragment(R.layout.fragment_run),EasyPermissions.PermissionCa
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         binding = FragmentRunBinding.bind(view)
         super.onViewCreated(view, savedInstanceState)
+//        val toolbarText = "Let's go, ${Constants.KEY_NAME}!"
+//        (requireActivity() as AppCompatActivity).supportActionBar?.title = toolbarText
         requestPermissions()
         setupRecyclerView()
 

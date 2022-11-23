@@ -20,9 +20,17 @@ object Constants {
 
     const val MAP_ZOOM = 15f
 
+    const val CANCEL_TRACKING_DIALOG_TAG = "CancelDialog"
+
     const val TIMER_UPDATE_INTERVAL = 50L
 
     const val NOTIFICATION_CHANNEL_ID  = "tracking_channel"
     const val NOTIFICATION_CHANNEL_NAME = "Tracking"
     const val NOTIFICATION_ID = 1 // This should be atleast 1, 0 doesn't work for notification id
+
+    const val SHARED_PREFERENCES_NAME = "sharedPref"
+    const val KEY_FIRST_TIME_TOGGLE = "KEY_FIRST_TIME_TOGGLE"
+    const val KEY_NAME = "KEY_NAME"
+    const val KEY_WEIGHT = "KEY_WEIGHT"
+
 }
